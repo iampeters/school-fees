@@ -28,8 +28,9 @@
   </svg>
 </template>
 
-<script>
-export default {
-  name: "LogoutIcon",
-}
+<script lang="ts">
+import Vue from 'vue'
+export default Vue.extend({
+  name: 'LogoutIcon',
+})
 </script>

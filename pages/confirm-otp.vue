@@ -20,16 +20,15 @@
       <div class="pt-[50px] pb-[32px]">
         <div class="flex flex-row justify-center items-center">
           <v-otp-input
-            ref="otpInput"
-            input-classes="otp-input"
-            separator=""
-            :num-inputs="6"
-            :should-auto-focus="true"
-            :is-input-num="true"
-            :conditionalClass="['one', 'two', 'three', 'four']"
-            @on-change="handleOnChange"
-            @on-complete="handleOnComplete"
-          />
+              ref="otpInput"
+              inputClasses="otp-input"
+              separator=""
+              :numInputs="6"
+              :shouldAutoFocus="true"
+              :isInputNum="true"
+              @on-change="handleOnChange"
+              @on-complete="handleOnComplete"
+            />
         </div>
       </div>
       <button
@@ -51,12 +50,13 @@
   </main>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
-import OtpVerificationModal from "../components/modals/OtpVerification.vue"
+<script lang="ts">
+import Vue from 'vue'
+
+import OtpVerificationModal from "~/components/modals/OtpVerification.vue"
 import DocumentIcon from "../components/svg-icons/EnvelopeIcon.vue"
 
-export default defineComponent({
+export default Vue.extend({
   components: {
     DocumentIcon,
     OtpVerificationModal,
@@ -81,8 +81,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
-::v-deep(input.otp-input) {
-  width: 51px;
+* >>> input.otp-input {
+  width: 44px;
   height: 56px;
   padding: 5px;
   margin: 0 10px;

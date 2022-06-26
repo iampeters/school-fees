@@ -33,15 +33,14 @@
     <!-- End:: header -->
     <!-- Start main navigation body -->
     <div class="flex-1 overflow-y-auto custom-scrollbar pt-4">
-      <router-link
+      <nuxt-link
         to="/dashboard"
         class="link-item"
         :class="{ active: $nuxt.$route.path.startsWith('/dashboard') }"
       >
-        <home-icon width="14"
-height="14"></home-icon>
+        <home-icon width="14" height="14"></home-icon>
         <span class="hide-on-collapse">Getting Started</span>
-      </router-link>
+      </nuxt-link>
       <article
         v-for="linkNav in dynamicNav"
         :key="linkNav.heading"
@@ -51,41 +50,41 @@ height="14"></home-icon>
           ><span class="hide-on-collapse">{{ linkNav.heading }}</span></span
         >
         <ul>
-          <li v-if="linkNav.title !== 'user'">
-            <router-link
-              to="/dashboard/payments"
-              @click.prevent="toggleShow"
+          <li>
+            <nuxt-link
+              to="#"
+              class="link-item"
               :class="{
                 active:
-                  $nuxt.$route.path.startsWith('/dashboard/payments') ||
-                  $nuxt.$route.path.startsWith('/dashboard/payments/make-payments'),
+                  $nuxt.$route.path.startsWith('/payments')
               }"
+              @click.prevent.native="toggleShow"
             >
               <document-icon width="14" height="14"></document-icon>
               <span class="hide-on-collapse">Payments</span>
-            </router-link>
+            </nuxt-link>
             <ul v-if="showPayment" class="ml-6 hide-on-collapse">
               <li>
-                <router-link
-                  to="/make-payments"
+                <nuxt-link
+                  to="/payments/make-payments"
                   class="nested-link__item"
                   :class="{
-                    active: $nuxt.$route.path.startsWith('/dashboard/payments/make-payments'),
+                    active: $nuxt.$route.path.startsWith('/payments'),
                   }"
                 >
                   <span class="hide-on-collapse">Make Payments</span>
-                </router-link>
+                </nuxt-link>
               </li>
               <li>
-                <router-link
+                <nuxt-link
                   to="/payments"
                   class="nested-link__item"
                   :class="{
-                    active: $nuxt.$route.path.startsWith('/dashboard/payments'),
+                    active: $nuxt.$route.path.startsWith('/payments'),
                   }"
                 >
-                  <span class="hide-on-collapse">All Payment</span>
-                </router-link>
+                  <span class="hide-on-collapse">All Payments</span>
+                </nuxt-link>
               </li>
             </ul>
           </li>
@@ -122,6 +121,7 @@ export default {
   },
   methods: {
     toggleShow() {
+      console.log('i got herer');
       this.showPayment = !this.showPayment
     },
   },
@@ -132,6 +132,7 @@ export default {
 #dashboard-sidebar {
   width: max-content;
   min-width: 248px;
+  background: rgba(248, 249, 251, 0.6) !important;
 
   & > * {
     @apply px-4;

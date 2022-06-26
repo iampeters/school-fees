@@ -71,6 +71,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapActions } from 'vuex'
+import { paylaodConstants } from '~/helpers/PayloadInterface'
 import ArrowRightIcon from "../components/svg-icons/ArrowRightIcon.vue"
 import BritishIcon from "../components/svg-icons/BritishIcon.vue"
 import SwapIcon from "../components/svg-icons/SwapIcon.vue"
@@ -83,7 +85,13 @@ export default Vue.extend({
     BritishIcon,
     SwapIcon
   },
+  mounted() {
+    this.onSubmit()
+  },
   methods:{
+  ...mapActions({
+      fetchRates: 'auth/fetchRates',
+    }),
     formatPrice(amount: any): string {
       return StringUtils.formatPrice(amount)
     },
@@ -92,6 +100,25 @@ export default Vue.extend({
     },
     goToRegister() {
       this.$nuxt.$router.push('/register')
+    },
+    async onSubmit() {
+      const payload = {
+        service_type: 'ForeignExchange',
+        service_payload: {
+          ...paylaodConstants,
+          request_class: 'FetchCurrencyRate'
+        }
+      }
+
+      const data = {
+        options: payload,
+        requestClass: 'fetchcurrencyrate',
+      }
+
+      console.log('===>data:', data);
+      
+
+      await this.fetchRates(data)
     }
   }
 })

@@ -25,16 +25,15 @@
                   prop="email_address"
                 >
                   <CustomInput
-                    v-model="registrationForm.email_address"
+                    v-model="loginForm.email_address"
                     placeholder="First Name"
                   />
-                  <el-input v-model="loginForm.email_address"></el-input>
                 </el-form-item>
               </div>
               <div class="w-full relative">
                 <el-form-item prop="Password">
                     <CustomInput
-                      v-model="registrationForm.password"
+                      v-model="loginForm.password"
                       placeholder="Password"
                       type="password"
                     />
