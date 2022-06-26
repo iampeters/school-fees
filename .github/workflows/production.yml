@@ -1,0 +1,98 @@
+# This workflow will build and push a new container image to Amazon ECR,
+# and then will deploy a new task definition to Amazon ECS, when a release is created
+#
+# To use this workflow, you will need to complete the following set-up steps:
+#
+# 1. Create an ECR repository to store your images.
+#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
+#    Replace the value of `ECR_REPOSITORY` in the workflow below with your repository's name.
+#    Replace the value of `aws-region` in the workflow below with your repository's region.
+#
+# 2. Create an ECS task definition, an ECS cluster, and an ECS service.
+#    For example, follow the Getting Started guide on the ECS console:
+#      https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/firstRun
+#    Replace the values for `service` and `cluster` in the workflow below with your service and cluster names.
+#
+# 3. Store your ECS task definition as a JSON file in your repository.
+#    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
+#    Replace the value of `task-definition` in the workflow below with your JSON file's name.
+#    Replace the value of `container-name` in the workflow below with the name of the container
+#    in the `containerDefinitions` section of the task definition.
+#
+# 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+#    See the documentation for each action used below for the recommended IAM policies for this IAM user,
+#    and best practices on handling the access key credentials.
+
+name: Deploy to AWS EKS
+
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Steps represent a sequence of tasks that will be executed as part of the job
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      # Steps represent a sequence of tasks that will be executed as part of the job
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: setup-git-credentials
+        # You may pin to the exact commit or the version.
+        # uses: fusion-engineering/setup-git-credentials@1ffa9266dc7fa821d6419a2b6484d8688b42814d
+        uses: fusion-engineering/setup-git-credentials@v2.0.6
+        with:
+          # git credentials use
+          credentials: https://iampeters:${{secrets.PAT}}@github.com
+
+      # LIVE
+      - name: Build, tag, push image to Amazon ECR and deploy to EKS
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "school-fees-web"
+          IMAGE_TAG: ${{ github.run_number }}
+          BASE_URL: ${{secrets.BASE_URL_LIVE}}
+          ENCRYPTION_SALT: ${{secrets.ENCRYPTION_SALT}}
+          ENCRYPTION_PASSWORD: ${{secrets.ENCRYPTION_PASSWORD}}
+          ENCRYPTION_IV: ${{secrets.ENCRYPTION_IV}}
+          ALGORITHM_KEY_LEN: ${{secrets.ALGORITHM_KEY_LEN}}
+          ITERATION_COUNT: ${{secrets.ITERATION_COUNT}}
+          ENCRYPTION_CIPHER_ALGORITHM: ${{secrets.ENCRYPTION_CIPHER_ALGORITHM}}
+          VERIFY_URL: ${{secrets.VERIFY_URL_LIVE}}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to EKS.
+          docker build --build-arg BASE_URL=$BASE_URL --build-arg ENCRYPTION_SALT=$ENCRYPTION_SALT --build-arg ENCRYPTION_PASSWORD=$ENCRYPTION_PASSWORD --build-arg ENCRYPTION_IV=$ENCRYPTION_IV --build-arg ALGORITHM_KEY_LEN=$ALGORITHM_KEY_LEN --build-arg ITERATION_COUNT=$ITERATION_COUNT --build-arg ENCRYPTION_CIPHER_ALGORITHM=$ENCRYPTION_CIPHER_ALGORITHM --build-arg VERIFY_URL=$VERIFY_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          sed -i "s/tag/${{github.run_number}}/g" ./k8s/kubedeploy.yml
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - uses: Azure/k8s-set-context@v1
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy PROD
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          namespace: prod
+          manifests: |
+            ./k8s/kubedeploy.yml
+          images: |
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          imagepullsecrets: |
+            regcred
