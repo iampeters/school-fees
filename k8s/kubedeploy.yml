@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payaza-school-fees-web
+  labels:
+    app: payaza-school-fees-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payaza-school-fees-web
+  template:
+    metadata:
+      labels:
+        app: payaza-school-fees-web
+    spec:
+      containers:
+        - name: payaza-school-fees-web
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '250m'
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+          image: 823343520581.dkr.ecr.eu-west-1.amazonaws.com/school-fees-web:tag
+          ports:
+            - containerPort: 80
+          env:
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: web-apps
+                  key: scrBASE_URL
+            - name: VERIFY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: web-apps
+                  key: scrVERIFY_URL
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payaza-school-fees-web
+spec:
+  selector:
+    app: payaza-school-fees-web
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 80
+  type: NodePort
