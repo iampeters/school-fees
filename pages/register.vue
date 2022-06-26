@@ -68,15 +68,16 @@
                 </el-form-item>
               </div>
               <button
+                @click.prevent="onSubmit"
                 class="w-full bg-payazablue-500 text-white rounded py-3.5 text-[13px] focus:outline-none"
               >
-                Create Account
+                {{ loader ? 'Submitting...' : 'Continue' }}
               </button>
               <p class="text-center font-normal text-[#616E7C] pt-4">
                 Already have an account?
                 <span
                   class="text-payazablue-500 text-sm cursor-pointer"
-                  @click="goToLogin"
+                  
                   >Log In</span
                 >
               </p>
@@ -90,11 +91,14 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapActions } from 'vuex'
+import { paylaodConstants } from '~/helpers/PayloadInterface'
 
 export default Vue.extend({
   data() {
     return {
       rules: {},
+      loading: false,
       registrationForm: {
         first_name: "",
         last_name: "",
@@ -104,9 +108,46 @@ export default Vue.extend({
       },
     }
   },
+  computed: {
+    loader(): boolean {
+      return this.$store.state.auth.loader
+    },
+  },
   methods: {
+...mapActions({
+      registerUser: 'auth/registerUser',
+    }),
     goToLogin() {
       this.$router.push({ path: "login" })
+    },
+    async onSubmit() {
+      this.loading = true
+      const payload = {
+        service_type: 'ForeignExchange',
+        service_payload: {
+          ...paylaodConstants,
+          first_name: this.registrationForm.first_name,
+          last_name: this.registrationForm.last_name,
+          email_address: this.registrationForm.email_address,
+          mobile_number: this.registrationForm.phone_number,
+          address: this.registrationForm.address,
+          request_class: 'RegisterFXUser'
+        }
+      }
+
+      const data = {
+        options: payload,
+        requestClass: 'registerfxuser'
+      }
+
+      console.log(payload);
+      
+
+      await this.registerUser(data)
+      .then((res: any) => {
+        console.log(res);
+        this.loading = false
+      })
     },
   },
 })

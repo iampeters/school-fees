@@ -30,5 +30,22 @@ export const actions = {
         reject(err)
       })
     })
+  },
+  registerUser({ commit }, data) {
+    Http.defaults.baseURL = this.$config.baseURL
+    commit('START_REQUEST')
+    const { options, requestClass } = data
+    return new Promise((resolve, reject) => {
+      Http.post(`/authexchange/${requestClass}`, options)
+        .then((response) => {
+          console.log(response);
+          commit('STOP_REQUEST')
+          resolve(response)
+        })
+        .catch((err) => {
+          commit('STOP_REQUEST')
+          reject(err)
+        })
+    })
   }
 }
